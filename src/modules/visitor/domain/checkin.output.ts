@@ -1,11 +1,13 @@
 interface CheckinSuccess{
     status: number,
-    message: string
+    message: string,
+    data: any
 }
 
 interface CheckOutSuccess{
     status: number,
-    message: string
+    message: string,
+    data: any
 }
 
 interface CheckinOutput{
