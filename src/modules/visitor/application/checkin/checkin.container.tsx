@@ -14,6 +14,12 @@ function CheckinContainer() {
         mutationKey: ['checkin'],
         mutationFn: (formData: FormData) => {
             return outputs.checkinOutput.checkin(formData);
+        },
+        onSuccess:(data)=>{
+            alert(data?.message)
+        },
+        onError: (e)=>{
+            alert(e.message)
         }
     })
 
@@ -69,20 +75,8 @@ function CheckinContainer() {
         }
     };
 
-    const serverError= error as {message: string};
-
     return (
         <>
-            {
-                isSuccess && (
-                    alert(data?.message)
-                )
-            }
-            {
-                isError&&(
-                    alert(error?.message)
-                )
-            }
             <CheckinView
                 capturedImageUrl={capturedImageUrl}
                 capturedImage={capturedImage}

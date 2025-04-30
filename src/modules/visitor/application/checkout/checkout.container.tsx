@@ -14,6 +14,12 @@ function CheckoutContainer() {
         mutationKey: ['checkin'],
         mutationFn: (formData: FormData) => {
             return outputs.checkinOutput.checkout(formData);
+        },
+        onSuccess:(data)=>{
+            alert(data?.message)
+        },
+        onError: (e)=>{
+            alert(e.message)
         }
     })
 
@@ -68,21 +74,9 @@ function CheckoutContainer() {
             console.error('Error capturing image:', error);
         }
     };
-
-    const serverError= error as {message: string};
-
+    
     return (
         <>
-            {
-                isSuccess && (
-                    alert(data?.message)
-                )
-            }
-            {
-                isError&&(
-                    alert(error?.message)
-                )
-            }
             <CheckoutView
                 capturedImageUrl={capturedImageUrl}
                 capturedImage={capturedImage}
