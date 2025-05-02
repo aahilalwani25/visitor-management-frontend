@@ -12,6 +12,12 @@ function CheckinContainer() {
 
     const { mutate: checkin, isSuccess, isError, error, data } = useMutation({
         mutationKey: ['checkin'],
+        onSuccess:(data)=>{
+            alert(data?.message)
+        },
+        onError: (data)=>{
+            alert(data?.message)
+        },
         mutationFn: (formData: FormData) => {
             return outputs.checkinOutput.scanCnic(formData);
         }
