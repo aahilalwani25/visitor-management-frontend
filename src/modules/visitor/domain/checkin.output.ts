@@ -4,6 +4,12 @@ interface CheckinSuccess{
     data: any
 }
 
+interface CreateUserSuccess{
+    status: number,
+    message: string,
+    data: any
+}
+
 interface CheckOutSuccess{
     status: number,
     message: string,
@@ -12,5 +18,6 @@ interface CheckOutSuccess{
 
 interface CheckinOutput{
     checkin(formData: FormData): Promise<CheckinSuccess>
-    checkin(formData: FormData): Promise<CheckOutSuccess>
+    checkout(formData: FormData): Promise<CheckOutSuccess>
+
 }

@@ -3,20 +3,23 @@ import React, { useEffect, useRef, useState } from 'react'
 import CheckinView from './checkin.view';
 import { useMutation } from '@tanstack/react-query';
 import { outputs } from '@/config/output';
+import { useRouter } from 'next/navigation';
 
 function CheckinContainer() {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [capturedImage, setCapturedImage] = useState<Blob | null>(null);
     const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null); // Add this new state
+    const router= useRouter();
 
-    const { mutate: checkin, isSuccess, isError, error, data } = useMutation({
+    const { mutate: checkin, } = useMutation({
         mutationKey: ['checkin'],
         mutationFn: (formData: FormData) => {
             return outputs.checkinOutput.checkin(formData);
         },
         onSuccess:(data)=>{
             alert(data?.message)
+            router?.push(`/create-visitor/${data?.data?.new_user_id}`);
         },
         onError: (e)=>{
             alert(e.message)
