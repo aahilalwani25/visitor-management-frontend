@@ -19,7 +19,9 @@ function CheckinContainer() {
         },
         onSuccess:(data)=>{
             alert(data?.message)
-            router?.push(`/create-visitor/${data?.data?.new_user_id}`);
+            if(data?.data?.user_id){
+                router?.push(`/create-visitor/${data?.data?.new_user_id}`);
+            }
         },
         onError: (e)=>{
             alert(e.message)
