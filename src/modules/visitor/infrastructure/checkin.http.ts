@@ -4,7 +4,7 @@ export default class CheckinHttp implements CheckinOutput{
 
     async checkin(formData: FormData): Promise<CheckinSuccess> {
         try {
-            const result= await publicAxios.postForm('/checkin/',formData);
+            const result= await publicAxios.postForm('/verify/',formData);
             return Promise.resolve(result?.data)
         } catch (error) {
             return Promise.reject(error);
