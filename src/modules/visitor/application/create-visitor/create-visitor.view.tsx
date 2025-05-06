@@ -7,23 +7,48 @@ interface Props {
     register: UseFormRegister<CreateUserFormData>;
     handleSubmit: UseFormHandleSubmit<CreateUserFormData>;
     onSubmit: UseMutateFunction<CreateUserSuccess, Error, CreateUserFormData, unknown>;
-    user_id: string|undefined
+    user_id: string | undefined;
 }
 
-function CreateVisitorView({...props}: Props) {
+function CreateVisitorView({ ...props }: Props) {
     return (
-        <form onSubmit={props.handleSubmit((data)=>props.onSubmit(data))} className='flex flex-col gap-5'>
-            <h1>Create Visitor</h1>
-            <input {...props.register("cnic", { required: true, maxLength: 20 })} className='border border-white h-8 w-60 rounded' placeholder='Enter Cnic' />
-            <input {...props.register("full_name", { required: true, maxLength: 20 })} className='border border-white h-8 w-60 rounded' placeholder='Enter Name' />
-            <input {...props.register("check_in")} value={new Date().toISOString()} className='hidden'/>
-            <input {...props.register("user_id")} value={props.user_id} className='hidden'/>
-            <div className="mt-4 space-x-2">
-                <button type='submit' className="px-4 py-2 bg-purple-500 text-white rounded">
-                    Create
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+            <form 
+                onSubmit={props.handleSubmit((data) => props.onSubmit(data))} 
+                className="bg-white p-8 rounded-lg shadow-md w-full max-w-md space-y-6"
+            >
+                <h2 className="text-2xl font-bold text-center text-gray-800">New Visitor Registration</h2>
+
+                <div>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">CNIC</label>
+                    <input 
+                        {...props.register("cnic", { required: true, maxLength: 20 })} 
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Enter CNIC"
+                    />
+                </div>
+
+                <div>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">Full Name</label>
+                    <input 
+                        {...props.register("full_name", { required: true, maxLength: 20 })} 
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Enter Name"
+                    />
+                </div>
+
+                {/* Hidden inputs */}
+                <input {...props.register("check_in")} value={new Date().toISOString()} className="hidden" />
+                <input {...props.register("user_id")} value={props.user_id} className="hidden" />
+
+                <button 
+                    type="submit" 
+                    className="w-full py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+                >
+                    Register Visitor
                 </button>
-            </div>
-        </form>
+            </form>
+        </div>
     )
 }
 

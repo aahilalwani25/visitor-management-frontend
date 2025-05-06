@@ -5,11 +5,13 @@ import { useMutation } from '@tanstack/react-query';
 import { outputs } from '@/config/output';
 import {useForm} from 'react-hook-form'
 import { CreateUserFormData } from '../../visitor';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams ,useRouter } from 'next/navigation';
+
 
 function CreateVisitorContainer() {
     const params = useParams();
     console.log(params)
+    const router = useRouter();
 
     const { register, handleSubmit }= useForm<CreateUserFormData>()
     
@@ -21,14 +23,14 @@ function CreateVisitorContainer() {
         mutationKey: ['create-visitor'],
         mutationFn: onCreateUser,
         onSuccess: (data) => {
-            alert(data?.message)
+            alert(data?.message);
+            router.push('/');
+            
         },
         onError: (e) => {
             alert(e.message)
         }
     });
-
-
 
     return (
         <CreateVisitorView user_id={params?.visitor_id?.toString()} onSubmit={onSubmit} register={register} handleSubmit={handleSubmit}/>
