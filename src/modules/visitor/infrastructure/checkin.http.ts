@@ -10,7 +10,6 @@ export default class CheckinHttp implements CheckinOutput{
             return Promise.reject(error);
         }
     }
-
     async createVisitor(data: {
         user_id: string
         full_name: string
