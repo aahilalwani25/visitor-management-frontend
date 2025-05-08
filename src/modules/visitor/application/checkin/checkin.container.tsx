@@ -17,10 +17,13 @@ function CheckinContainer() {
         mutationKey: ['checkin'],
         mutationFn: (formData: FormData) => outputs.checkinOutput.checkin(formData),
         onSuccess: (data) => {
-            setFaceStatus(data?.message);
             detectingRef.current = false;
             if (data?.data?.new_user_id) {
-                router.push(`/create-visitor/${data?.data?.new_user_id}`);
+              // Example: redirect to complete profile
+              router.push(`/create-visitor/${data?.data?.new_user_id}`);
+            } else {
+              // Redirect to /checkin with query message (if needed)
+              router.push(`/checkin?message=${data?.message}`);
             }
         },
         onError: (e) => {
