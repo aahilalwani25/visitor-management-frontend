@@ -36,4 +36,5 @@ function CreateVisitorContainer() {
         <CreateVisitorView user_id={params?.visitor_id?.toString()} onSubmit={onSubmit} register={register} handleSubmit={handleSubmit}/>
     )
 }
+
 export default CreateVisitorContainer
