@@ -8,20 +8,28 @@ interface Props {
     onSend: () => Promise<void>
     capturedImage: Blob | null
     capturedImageUrl: string | null
+    faceStatus: string
 }
 function CheckinView({ ...props }: Props) {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
-            <div className="relative w-[480px] h-[360px] shadow-lg rounded-lg overflow-hidden border border-gray-300">
-                <video ref={props.videoRef} autoPlay playsInline width="480" height="360" className="border" />
+            <h1 className='text-xl text-white'>{props.faceStatus}</h1>
+            <div className="relative w-[640px] h-[480px]">
+                <video
+                    ref={props.videoRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="absolute top-0 left-0 w-full h-full object-cover z-0"
+                />
+                <canvas
+                    ref={props.canvasRef}
+                    width={640}
+                    height={480}
+                    className="absolute top-0 left-0 z-10"
+                />
             </div>
             <canvas ref={props.canvasRef} width="480" height="360" style={{ display: 'none' }} />
-
-            <div className="mt-4 space-x-2">
-                <button onClick={props.onSend} className="cursor-pointer px-4 py-2 bg-purple-500 text-white rounded">
-                    Check-in/Check-out
-                </button>
-            </div>
             {props.capturedImageUrl && (
                 <div className="mt-6">
                     <p className="text-sm text-gray-600 mb-1">Captured Snapshot:</p>
@@ -33,7 +41,7 @@ function CheckinView({ ...props }: Props) {
                 </div>
             )}
         </div>
-        
+
     )
 }
 
