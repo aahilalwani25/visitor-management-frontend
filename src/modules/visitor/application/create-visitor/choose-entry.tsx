@@ -1,29 +1,33 @@
-// pages/choose-entry-method/[user_id].tsx
+'use client';
 
-import { useRouter } from 'next/router';
-const ChooseEntryMethod = () => {
+import { useParams, useRouter } from 'next/navigation';
+
+export default function ChooseEntryMethod() {
   const router = useRouter();
-  const { user_id } = router.query;
+  const params = useParams(); // This will give you an object like { visitor_id: 'abc123' }
+
+  const visitor_id = params.visitor_id as string;
 
   const handleManual = () => {
-    router.push(`/create-visitor/${user_id}`);
+    router.push(`/create-visitor/${visitor_id}`);
+    console.log("visitor_id :", visitor_id);
   };
 
   const handleScan = () => {
-    router.push(`/scan-id/${user_id}`);
+    router.push(`/scan-id/${visitor_id}`);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen gap-4">
-      <h2 className="text-xl font-semibold mb-4">How would you like to proceed?</h2>
-      <button onClick={handleManual} className="px-6 py-3 bg-blue-500 text-white rounded-md">
-        Enter Manually
-      </button>
-      <button onClick={handleScan} className="px-6 py-3 bg-green-500 text-white rounded-md">
-        Scan ID
-      </button>
+    <div className="flex flex-col items-center justify-center h-screen gap-6">
+      <h2 className="text-xl font-semibold">How would you like to proceed?</h2>
+      <div className="flex gap-4">
+        <button onClick={handleManual} className="px-6 py-3 bg-blue-500 text-white rounded-md cursor-pointer">
+          Enter Manually
+        </button>
+        <button onClick={handleScan} className="px-6 py-3 bg-blue-500 text-white rounded-md cursor-pointer">
+          Scan ID
+        </button>
+      </div>
     </div>
   );
-};
-
-export default ChooseEntryMethod;
+}
