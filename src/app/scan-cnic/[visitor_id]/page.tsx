@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { ws } from "@/config/socketConfig";
 import { outputs } from "@/config/output";
+import { useParams, useRouter } from "next/navigation";
+import { CreateUserFormData } from "@/modules/visitor/visitor";
 
-// Define the possible types for the mutation result
-type MutationResult = string;
 
 export default function IDCardDetection() {
   const [detectionResult, setDetectionResult] = useState<string | null>(null);
@@ -14,16 +14,40 @@ export default function IDCardDetection() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const params = useParams();
+  const visitor_id = params?.visitor_id?.toString();
+  const router = useRouter();
 
+  const onCreateUser = (data: CreateUserFormData): Promise<CreateUserSuccess> => {
+    return outputs.checkinOutput.createVisitor(data);
+  };
+
+  const { mutate: onSubmitUserInformation, isPending: isCreateUserPending } = useMutation({
+    mutationKey: ['create-visitor'],
+    mutationFn: onCreateUser,
+    onSuccess: (data) => {
+      alert(data?.message);
+      router.replace('/');
+    },
+    onError: (e) => {
+      alert(e.message)
+    }
+  });
 
   const { mutate: scanCnic, isPending } = useMutation({
     mutationKey: ['checkin'],
     onSuccess: (data) => {
-      console.log(data)
-      alert(data?.message)
+      //console.log(data)
+      //alert(data?.message)
+      onSubmitUserInformation({
+        full_name: data?.data?.full_name!,
+        cnic: data?.data?.cnic,
+        check_in: new Date().toISOString(),
+        user_id: visitor_id!
+      })
     },
     onError: (data) => {
-      if(data.message!=="'NoneType' object is not iterable"){
+      if (data.message !== "'NoneType' object is not iterable") {
         alert(data?.message)
       }
     },
@@ -61,7 +85,7 @@ export default function IDCardDetection() {
       setTimeout(() => {
         setDetectionResult(null);
         setIsDetectSuccessful(false);
-      }, 3000);
+      }, 1000);
     });
 
 
@@ -125,7 +149,7 @@ export default function IDCardDetection() {
       };
 
       // Capture a frame every 3 seconds
-      const interval = setInterval(captureFrame, 3000);
+      const interval = setInterval(captureFrame, 1000);
       return () => clearInterval(interval);
     }
 
@@ -162,7 +186,7 @@ export default function IDCardDetection() {
         </div>
 
         {/* Hidden canvas */}
-        <canvas ref={canvasRef} style={{display:"none"}} />
+        <canvas ref={canvasRef} style={{ display: "none" }} />
 
         {/* Status information */}
         <div className="mt-6 p-4 bg-white rounded-lg shadow-sm text-center">
