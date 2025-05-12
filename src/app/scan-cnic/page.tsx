@@ -16,14 +16,16 @@ export default function IDCardDetection() {
   const [isLoading, setIsLoading] = useState(false);
 
 
-  const { mutate: scanCnic, isSuccess, isError, error: scanError, data } = useMutation({
+  const { mutate: scanCnic, isPending } = useMutation({
     mutationKey: ['checkin'],
     onSuccess: (data) => {
       console.log(data)
       alert(data?.message)
     },
     onError: (data) => {
-      alert(data?.message)
+      if(data.message!=="'NoneType' object is not iterable"){
+        alert(data?.message)
+      }
     },
     mutationFn: (formData: FormData) => {
       return outputs.checkinOutput.scanCnic(formData);
@@ -43,13 +45,12 @@ export default function IDCardDetection() {
 
       if (event.data === "True") {
         setIsDetectSuccessful(true);
-
         // ✅ Prepare FormData to pass to scanCnic
         if (canvasRef.current) {
           canvasRef.current.toBlob((blob) => {
             if (blob) {
               const formData = new FormData();
-              formData.append("image", blob, "cnic.jpg");
+              formData.append("file", blob, "cnic.jpg");
               scanCnic(formData);  // ✅ Now with the image
             }
           }, "image/jpeg");
@@ -149,7 +150,7 @@ export default function IDCardDetection() {
           </div>
 
           {/* Processing overlay */}
-          {isLoading && (
+          {isPending && (
             <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
               <div className="text-center text-white p-6">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
@@ -161,16 +162,16 @@ export default function IDCardDetection() {
         </div>
 
         {/* Hidden canvas */}
-        <canvas ref={canvasRef}  />
+        <canvas ref={canvasRef} style={{display:"none"}} />
 
         {/* Status information */}
         <div className="mt-6 p-4 bg-white rounded-lg shadow-sm text-center">
-          <p className={`text-lg font-medium ${isLoading ? 'text-blue-600' : 'text-gray-800'}`}>
+          {/* <p className={`text-lg font-medium ${isLoading ? 'text-blue-600' : 'text-gray-800'}`}>
             {detectionResult}
-          </p>
-          {isLoading && (
+          </p> */}
+          {!isPending && (
             <p className="mt-2 text-sm text-gray-600">
-              This usually takes 2-3 seconds
+              Align your card with the box
             </p>
           )}
         </div>
