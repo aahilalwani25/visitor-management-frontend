@@ -5,15 +5,15 @@ import { ws } from "@/config/socketConfig";
 import { outputs } from "@/config/output";
 import { useParams, useRouter } from "next/navigation";
 import { CreateUserFormData } from "@/modules/visitor/visitor";
+import { CLEAR_RESULT, EVERY_SECOND_DETECTION } from "@/constants";
 
 
 export default function IDCardDetection() {
   const [detectionResult, setDetectionResult] = useState<string | null>(null);
   const [isDetectSuccessful, setIsDetectSuccessful] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const detectionCountRef = useRef(0); // <-- NEW
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const params = useParams();
   const visitor_id = params?.visitor_id?.toString();
   const router = useRouter();
@@ -27,6 +27,7 @@ export default function IDCardDetection() {
     mutationFn: onCreateUser,
     onSuccess: (data) => {
       alert(data?.message);
+      detectionCountRef.current=0;
       router.replace('/');
     },
     onError: (e) => {
@@ -37,8 +38,6 @@ export default function IDCardDetection() {
   const { mutate: scanCnic, isPending } = useMutation({
     mutationKey: ['checkin'],
     onSuccess: (data) => {
-      //console.log(data)
-      //alert(data?.message)
       onSubmitUserInformation({
         full_name: data?.data?.full_name!,
         cnic: data?.data?.cnic,
@@ -49,6 +48,7 @@ export default function IDCardDetection() {
     onError: (data) => {
       if (data.message !== "'NoneType' object is not iterable") {
         alert(data?.message)
+        detectionCountRef.current=0;
       }
     },
     mutationFn: (formData: FormData) => {
@@ -64,20 +64,25 @@ export default function IDCardDetection() {
 
     ws.addEventListener("message", (event) => {
       console.log("Message from server:", event.data);
-      setIsLoading(false);
       setDetectionResult(event.data);
 
       if (event.data === "True") {
-        setIsDetectSuccessful(true);
-        // ✅ Prepare FormData to pass to scanCnic
-        if (canvasRef.current) {
-          canvasRef.current.toBlob((blob) => {
-            if (blob) {
-              const formData = new FormData();
-              formData.append("file", blob, "cnic.jpg");
-              scanCnic(formData);  // ✅ Now with the image
-            }
-          }, "image/jpeg");
+        console.log(detectionCountRef.current)
+        if(detectionCountRef.current>=3){
+          setIsDetectSuccessful(true);
+          // ✅ Prepare FormData to pass to scanCnic
+          if (canvasRef.current) {
+            canvasRef.current.toBlob((blob) => {
+              if (blob) {
+                const formData = new FormData();
+                formData.append("file", blob, "cnic.jpg");
+                scanCnic(formData);  // ✅ Now with the image
+              }
+            }, "image/jpeg");
+          }
+        }else{
+          const newCount = detectionCountRef.current + 1;
+          detectionCountRef.current = newCount; // <-- Keep ref in sync
         }
       }
 
@@ -85,10 +90,8 @@ export default function IDCardDetection() {
       setTimeout(() => {
         setDetectionResult(null);
         setIsDetectSuccessful(false);
-      }, 1000);
+      }, CLEAR_RESULT);
     });
-
-
 
     return () => {
       ws.close(); // clean up
@@ -106,7 +109,6 @@ export default function IDCardDetection() {
         }
       } catch (err) {
         console.error("Error accessing webcam:", err);
-        setError("Unable to access webcam.");
       }
     };
 
@@ -139,7 +141,6 @@ export default function IDCardDetection() {
                 const base64data = reader.result?.toString().split(",")[1]; // remove data:image/jpeg;base64,
                 if (base64data) {
                   ws.send(base64data);
-                  setIsLoading(true);
                 }
               };
               reader.readAsDataURL(blob);
@@ -148,8 +149,8 @@ export default function IDCardDetection() {
         }
       };
 
-      // Capture a frame every 3 seconds
-      const interval = setInterval(captureFrame, 1000);
+      // Capture a frame every 1 seconds
+      const interval = setInterval(captureFrame, EVERY_SECOND_DETECTION);
       return () => clearInterval(interval);
     }
 
@@ -170,7 +171,7 @@ export default function IDCardDetection() {
 
           {/* Card placement guide */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="border-2 border-dashed border-green-400 rounded-lg w-[65%] h-2/3 opacity-60 pointer-events-none"></div>
+            <div className={`border-4 border-dashed ${detectionCountRef.current>=2?"border-green-600":"border-red-600"} rounded-lg w-[65%] h-2/3 opacity-60 pointer-events-none`}></div>
           </div>
 
           {/* Processing overlay */}

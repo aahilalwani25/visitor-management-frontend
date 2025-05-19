@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { outputs } from '@/config/output';
 import { useRouter } from 'next/navigation';
 import * as faceapi from '@vladmandic/face-api';
+
 function CheckinContainer() {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -13,6 +14,17 @@ function CheckinContainer() {
     const [faceStatus, setFaceStatus] = useState<string>('Align your face with the camera');
     const detectingRef = useRef(false);
     const router = useRouter();
+
+
+    const closeCamera = () => {
+        const videoElement = videoRef.current;
+        if (videoElement && videoElement.srcObject instanceof MediaStream) {
+            const stream = videoElement.srcObject as MediaStream;
+            stream.getTracks().forEach(track => track.stop());
+            videoElement.srcObject = null; // Explicitly clear the stream
+        }
+    };//, []);
+
     const { mutate: checkin } = useMutation({
         mutationKey: ['checkin'],
         mutationFn: (formData: FormData) => outputs.checkinOutput.checkin(formData),
@@ -20,12 +32,12 @@ function CheckinContainer() {
         onSuccess: (data) => {
             detectingRef.current = false;
             if (data?.data?.new_user_id) {
-              // Example: redirect to complete profile
-            //   router.push(`/create-visitor/${data?.data?.new_user_id}`);
+                closeCamera()
                 router.push(`/choose-entry-method/${data?.data?.new_user_id}`);
             } else {
-              // Redirect to /checkin with query message (if needed)
-              router.push(`/checkin?message=${data?.message}`);
+                // Redirect to /checkin with query message (if needed)
+                closeCamera()
+                router.push(`/checkin?message=${data?.message}`);
             }
         },
 
@@ -38,9 +50,10 @@ function CheckinContainer() {
     const loadModels = useCallback(async () => {
         await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
     }, []);
+
     const startCamera = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
                 videoRef.current.width = 640;
