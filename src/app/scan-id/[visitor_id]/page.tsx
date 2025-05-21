@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { ws } from "@/config/socketConfig";
 import { outputs } from "@/config/output";
 import { useParams, useRouter } from "next/navigation";
 import { CreateUserFormData } from "@/modules/visitor/visitor";
@@ -11,6 +10,7 @@ import { CLEAR_RESULT, EVERY_SECOND_DETECTION } from "@/constants";
 export default function IDCardDetection() {
   const [detectionResult, setDetectionResult] = useState<string | null>(null);
   const [isDetectSuccessful, setIsDetectSuccessful] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
   const detectionCountRef = useRef(0); // <-- NEW
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -27,7 +27,7 @@ export default function IDCardDetection() {
     mutationFn: onCreateUser,
     onSuccess: (data) => {
       alert(data?.message);
-      detectionCountRef.current=0;
+      detectionCountRef.current = 0;
       router.replace('/');
     },
     onError: (e) => {
@@ -48,7 +48,7 @@ export default function IDCardDetection() {
     onError: (data) => {
       if (data.message !== "'NoneType' object is not iterable") {
         alert(data?.message)
-        detectionCountRef.current=0;
+        detectionCountRef.current = 0;
       }
     },
     mutationFn: (formData: FormData) => {
@@ -58,45 +58,56 @@ export default function IDCardDetection() {
 
   // Custom mutation with WebSocket communication
   useEffect(() => {
-    ws.addEventListener("open", () => {
-      console.log("Socket connected");
-    });
+    if (!wsRef.current) {
+      const socket = new WebSocket("ws://localhost:8000/ws/detect-cnic");
+      wsRef.current = socket;
 
-    ws.addEventListener("message", (event) => {
-      console.log("Message from server:", event.data);
-      setDetectionResult(event.data);
+      socket.addEventListener("open", () => {
+        console.log("Socket connected");
+      });
 
-      if (event.data === "True") {
-        console.log(detectionCountRef.current)
-        if(detectionCountRef.current>=3){
-          setIsDetectSuccessful(true);
-          // ✅ Prepare FormData to pass to scanCnic
-          if (canvasRef.current) {
-            canvasRef.current.toBlob((blob) => {
-              if (blob) {
-                const formData = new FormData();
-                formData.append("file", blob, "cnic.jpg");
-                scanCnic(formData);  // ✅ Now with the image
-              }
-            }, "image/jpeg");
+      socket.addEventListener("message", (event) => {
+        console.log("Message from server:", event.data);
+        setDetectionResult(event.data);
+
+        if (event.data === "True") {
+          if (detectionCountRef.current >= 3) {
+            setIsDetectSuccessful(true);
+            if (canvasRef.current) {
+              canvasRef.current.toBlob((blob) => {
+                if (blob) {
+                  const formData = new FormData();
+                  formData.append("file", blob, "cnic.jpg");
+                  scanCnic(formData);
+                }
+              }, "image/jpeg");
+            }
+          } else {
+            detectionCountRef.current += 1;
           }
-        }else{
-          const newCount = detectionCountRef.current + 1;
-          detectionCountRef.current = newCount; // <-- Keep ref in sync
         }
-      }
 
-      // Clear result after 3s
-      setTimeout(() => {
-        setDetectionResult(null);
-        setIsDetectSuccessful(false);
-      }, CLEAR_RESULT);
-    });
+        setTimeout(() => {
+          setDetectionResult(null);
+          setIsDetectSuccessful(false);
+        }, CLEAR_RESULT);
+      });
+
+      socket.addEventListener("close", () => {
+        console.log("Socket closed");
+      });
+
+      socket.addEventListener("error", (err) => {
+        console.error("Socket error:", err);
+      });
+    }
 
     return () => {
-      ws.close(); // clean up
+      wsRef.current?.close();
+      wsRef.current = null;
     };
   }, []);
+
 
   // Start webcam and capture a frame every few seconds
   useEffect(() => {
@@ -140,7 +151,10 @@ export default function IDCardDetection() {
               reader.onloadend = () => {
                 const base64data = reader.result?.toString().split(",")[1]; // remove data:image/jpeg;base64,
                 if (base64data) {
-                  ws.send(base64data);
+                  console.log("sendingggggg");
+                  if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                    wsRef.current.send(base64data);
+                  }
                 }
               };
               reader.readAsDataURL(blob);
@@ -171,7 +185,7 @@ export default function IDCardDetection() {
 
           {/* Card placement guide */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className={`border-4 border-dashed ${detectionCountRef.current>=2?"border-green-600":"border-red-600"} rounded-lg w-[65%] h-2/3 opacity-60 pointer-events-none`}></div>
+            <div className={`border-4 border-dashed ${detectionCountRef.current >= 2 ? "border-green-600" : "border-red-600"} rounded-lg w-[65%] h-2/3 opacity-60 pointer-events-none`}></div>
           </div>
 
           {/* Processing overlay */}

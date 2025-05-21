@@ -1,1 +1,1 @@
-export const ws = new WebSocket("ws://localhost:8000/ws/detect-cnic");
+//export const ws = new WebSocket("ws://localhost:8000/ws/detect-cnic");
