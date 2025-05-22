@@ -3,9 +3,6 @@ import React from 'react'
 interface Props {
     videoRef: React.RefObject<HTMLVideoElement | null>
     canvasRef: React.RefObject<HTMLCanvasElement | null>
-    captureImage: () => void
-    startCamera: () => Promise<void>
-    onSend: () => Promise<void>
     capturedImage: Blob | null
     capturedImageUrl: string | null
     faceStatus: string

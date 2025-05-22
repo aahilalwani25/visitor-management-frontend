@@ -1,0 +1,2 @@
+export const EVERY_SECOND_DETECTION=1000;
+export const CLEAR_RESULT=1000
