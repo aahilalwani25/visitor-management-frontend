@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import CheckinView from './checkin.view';
 import { useMutation } from '@tanstack/react-query';
@@ -15,54 +15,78 @@ function CheckinContainer() {
     const detectingRef = useRef(false);
     const router = useRouter();
 
-
     const closeCamera = () => {
         const videoElement = videoRef.current;
         if (videoElement && videoElement.srcObject instanceof MediaStream) {
             const stream = videoElement.srcObject as MediaStream;
             stream.getTracks().forEach(track => track.stop());
-            videoElement.srcObject = null; // Explicitly clear the stream
+            videoElement.srcObject = null;
         }
-    };//, []);
+    };
 
     const { mutate: checkin } = useMutation({
         mutationKey: ['checkin'],
         mutationFn: (formData: FormData) => outputs.checkinOutput.checkin(formData),
-
         onSuccess: (data) => {
             detectingRef.current = false;
+            closeCamera();
             if (data?.data?.new_user_id) {
-                closeCamera()
                 router.push(`/choose-entry-method/${data?.data?.new_user_id}`);
             } else {
-                // Redirect to /checkin with query message (if needed)
-                closeCamera()
                 router.push(`/checkin?message=${data?.message}`);
             }
         },
-
         onError: (e) => {
-            setFaceStatus(e?.message);
-            console.error(e);
+            setFaceStatus(e?.message || 'Error during check-in.');
             detectingRef.current = false;
+            closeCamera();
+            router?.refresh()
+            // setTimeout(()=>{
+            //     setCapturedImage(null)
+            //     setCapturedImageUrl(null)
+            //     closeCamera();
+            // },2000)
         }
     });
+
     const loadModels = useCallback(async () => {
         await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
     }, []);
 
     const startCamera = async () => {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        try {
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                videoRef.current.width = 640;
-                videoRef.current.height = 480;
-            }
-        } catch (err) {
-            console.error("Error accessing camera:", err);
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 640, height: 480 } // fixed resolution
+        });
+
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+
+        if (video) {
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                video.play();
+
+                // Set video and canvas size to match the actual stream size
+                const actualWidth = video.videoWidth;
+                const actualHeight = video.videoHeight;
+
+                video.width = actualWidth;
+                video.height = actualHeight;
+
+                if (canvas) {
+                    canvas.width = actualWidth;
+                    canvas.height = actualHeight;
+                }
+            };
         }
-    };
+    } catch (err) {
+        console.error('Error accessing camera:', err);
+        setFaceStatus('Unable to access camera.');
+    }
+};
+
+
     const captureImage = (): Promise<Blob> => {
         return new Promise((resolve, reject) => {
             const video = videoRef.current;
@@ -85,6 +109,7 @@ function CheckinContainer() {
             }, 'image/jpeg');
         });
     };
+
     const onCheckin = async () => {
         try {
             setFaceStatus('Processing...');
@@ -99,50 +124,67 @@ function CheckinContainer() {
         }
     };
 
-    const detectFace = async () => {
-        if (!videoRef.current || !canvasRef.current || detectingRef.current) return;
-        const detection = await faceapi.detectSingleFace(
-            videoRef.current,
-            new faceapi.TinyFaceDetectorOptions()
-        );
-        const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
-        context?.clearRect(0, 0, canvas.width, canvas.height); // Clear previous drawings
-        if (detection && context) {
-            const { x, y, width, height } = detection.box;
-            // Draw green box
-            context.strokeStyle = 'lime';
-            context.lineWidth = 3;
-            context.strokeRect(x, y, width, height);
-            setFaceStatus('Face detected! Stay still...');
-            detectingRef.current = true;
-            await onCheckin();
-        } else {
-            setFaceStatus('Align your face with the camera');
-        }
-    };
-
     useEffect(() => {
+        let detectionStartTime: number | null = null;
+        let intervalId: NodeJS.Timeout;
+
+        const detectContinuously = async () => {
+            if (!videoRef.current || !canvasRef.current || detectingRef.current) return;
+
+            const detection = await faceapi.detectSingleFace(
+                videoRef.current,
+                new faceapi.TinyFaceDetectorOptions()
+            );
+
+            const canvas = canvasRef.current;
+            const context = canvas.getContext('2d');
+            context?.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (detection) {
+                const { x, y, width, height } = detection.box;
+
+                context!.strokeStyle = 'lime';
+                context!.lineWidth = 3;
+                context!.strokeRect(x, y, width, height);
+
+                setFaceStatus('Face detected! Hold still...');
+                const now = Date.now();
+                if (!detectionStartTime) {
+                    detectionStartTime = now;
+                } else if (now - detectionStartTime > 2000) {
+                    detectingRef.current = true;
+                    setFaceStatus('Capturing...');
+                    await onCheckin();
+                }
+            } else {
+                setFaceStatus('Align your face with the camera');
+                detectionStartTime = null;
+            }
+        };
+
         const initialize = async () => {
             await loadModels();
             await startCamera();
+            intervalId = setInterval(detectContinuously, 200);
         };
+
         initialize();
-        const interval = setInterval(() => detectFace(), 5000);
-        return () => clearInterval(interval);
+
+        return () => {
+            clearInterval(intervalId);
+            closeCamera();
+        };
     }, []);
 
     return (
         <CheckinView
             capturedImageUrl={capturedImageUrl}
             capturedImage={capturedImage}
-            onSend={onCheckin}
             canvasRef={canvasRef}
             videoRef={videoRef}
-            startCamera={startCamera}
-            captureImage={captureImage}
-            faceStatus={faceStatus} // :point_left: new prop for user feedback
+            faceStatus={faceStatus}
         />
     );
 }
+
 export default CheckinContainer;
