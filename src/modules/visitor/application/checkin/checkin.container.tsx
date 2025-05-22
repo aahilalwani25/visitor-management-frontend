@@ -12,7 +12,9 @@ function CheckinContainer() {
     const [capturedImage, setCapturedImage] = useState<Blob | null>(null);
     const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null);
     const [faceStatus, setFaceStatus] = useState<string>('Align your face with the camera');
+
     const detectingRef = useRef(false);
+    const isProcessingRef = useRef(false); // ✅ NEW REF to guard against multiple calls
     const router = useRouter();
 
     const closeCamera = () => {
@@ -29,6 +31,7 @@ function CheckinContainer() {
         mutationFn: (formData: FormData) => outputs.checkinOutput.checkin(formData),
         onSuccess: (data) => {
             detectingRef.current = false;
+            isProcessingRef.current = false; // ✅ Reset processing flag
             closeCamera();
             if (data?.data?.new_user_id) {
                 router.push(`/choose-entry-method/${data?.data?.new_user_id}`);
@@ -37,15 +40,10 @@ function CheckinContainer() {
             }
         },
         onError: (e) => {
-            setFaceStatus(e?.message || 'Error during check-in.');
+            setFaceStatus(e?.message || 'Check-in failed.');
+            console.error(e);
             detectingRef.current = false;
-            closeCamera();
-            router?.refresh()
-            // setTimeout(()=>{
-            //     setCapturedImage(null)
-            //     setCapturedImageUrl(null)
-            //     closeCamera();
-            // },2000)
+            isProcessingRef.current = false; // ✅ Reset on error
         }
     });
 
@@ -54,38 +52,36 @@ function CheckinContainer() {
     }, []);
 
     const startCamera = async () => {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 640, height: 480 } // fixed resolution
-        });
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480 }
+            });
 
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
 
-        if (video) {
-            video.srcObject = stream;
-            video.onloadedmetadata = () => {
-                video.play();
+            if (video) {
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    video.play();
 
-                // Set video and canvas size to match the actual stream size
-                const actualWidth = video.videoWidth;
-                const actualHeight = video.videoHeight;
+                    const actualWidth = video.videoWidth;
+                    const actualHeight = video.videoHeight;
 
-                video.width = actualWidth;
-                video.height = actualHeight;
+                    video.width = actualWidth;
+                    video.height = actualHeight;
 
-                if (canvas) {
-                    canvas.width = actualWidth;
-                    canvas.height = actualHeight;
-                }
-            };
+                    if (canvas) {
+                        canvas.width = actualWidth;
+                        canvas.height = actualHeight;
+                    }
+                };
+            }
+        } catch (err) {
+            console.error('Error accessing camera:', err);
+            setFaceStatus('Unable to access camera.');
         }
-    } catch (err) {
-        console.error('Error accessing camera:', err);
-        setFaceStatus('Unable to access camera.');
-    }
-};
-
+    };
 
     const captureImage = (): Promise<Blob> => {
         return new Promise((resolve, reject) => {
@@ -111,6 +107,10 @@ function CheckinContainer() {
     };
 
     const onCheckin = async () => {
+        // ✅ Prevent multiple triggers
+        if (isProcessingRef.current) return;
+        isProcessingRef.current = true;
+
         try {
             setFaceStatus('Processing...');
             const imageBlob = await captureImage();
@@ -121,6 +121,7 @@ function CheckinContainer() {
             console.error('Error capturing image:', error);
             setFaceStatus('Error capturing image.');
             detectingRef.current = false;
+            isProcessingRef.current = false; // Reset on error
         }
     };
 
@@ -129,7 +130,7 @@ function CheckinContainer() {
         let intervalId: NodeJS.Timeout;
 
         const detectContinuously = async () => {
-            if (!videoRef.current || !canvasRef.current || detectingRef.current) return;
+            if (!videoRef.current || !canvasRef.current || detectingRef.current || isProcessingRef.current) return;
 
             const detection = await faceapi.detectSingleFace(
                 videoRef.current,
@@ -142,19 +143,19 @@ function CheckinContainer() {
 
             if (detection) {
                 const { x, y, width, height } = detection.box;
-
                 context!.strokeStyle = 'lime';
                 context!.lineWidth = 3;
                 context!.strokeRect(x, y, width, height);
 
                 setFaceStatus('Face detected! Hold still...');
                 const now = Date.now();
+
                 if (!detectionStartTime) {
                     detectionStartTime = now;
                 } else if (now - detectionStartTime > 2000) {
                     detectingRef.current = true;
                     setFaceStatus('Capturing...');
-                    await onCheckin();
+                    await onCheckin(); // Only called once due to isProcessingRef
                 }
             } else {
                 setFaceStatus('Align your face with the camera');
