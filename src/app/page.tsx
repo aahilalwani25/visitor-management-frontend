@@ -1,7 +1,7 @@
-import CheckinContainer from "@/modules/visitor/application/checkin/checkin.container";
+import FaceRecognitionContainer from "@/modules/visitor/application/face-recognition/face-recognition.container";
 
 export default function Home() {
   return (
-    <CheckinContainer />
+    <FaceRecognitionContainer />
   );
-}CheckinContainer
+}

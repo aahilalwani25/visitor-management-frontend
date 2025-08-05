@@ -1,12 +1,12 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import CheckinView from './checkin.view';
 import { useMutation } from '@tanstack/react-query';
 import { outputs } from '@/config/output';
 import { useRouter } from 'next/navigation';
 import * as faceapi from '@vladmandic/face-api';
+import FaceRecognitionView from './face-recognition.view';
 
-function CheckinContainer() {
+function FaceRecognitionContainer() {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [capturedImage, setCapturedImage] = useState<Blob | null>(null);
@@ -36,7 +36,7 @@ function CheckinContainer() {
             if (data?.data?.new_user_id) {
                 router.push(`/choose-entry-method/${data?.data?.new_user_id}`);
             } else if(data?.data?.existing_user_id) {
-                router.push(`/checkin/${data?.data?.existing_user_id}`);
+                router.push(`/checkin?message=${data?.message}`);
             } else {
                 router.push(`/checkout?message=${data?.message}`);
             }
@@ -180,7 +180,7 @@ function CheckinContainer() {
     }, []);
 
     return (
-        <CheckinView
+        <FaceRecognitionView
             capturedImageUrl={capturedImageUrl}
             capturedImage={capturedImage}
             canvasRef={canvasRef}
@@ -190,4 +190,4 @@ function CheckinContainer() {
     );
 }
 
-export default CheckinContainer;
+export default FaceRecognitionContainer;
