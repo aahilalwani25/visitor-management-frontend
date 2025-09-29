@@ -3,18 +3,17 @@ import React from 'react'
 import CreateVisitorView from './create-visitor.view'
 import { useMutation } from '@tanstack/react-query';
 import { outputs } from '@/config/output';
-import {useForm} from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { CreateUserFormData } from '../../visitor';
-import { useParams, useSearchParams ,useRouter } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 
 
 function CreateVisitorContainer() {
     const params = useParams();
-    console.log(params)
     const router = useRouter();
 
-    const { register, handleSubmit }= useForm<CreateUserFormData>()
-    
+    const { register, handleSubmit } = useForm<CreateUserFormData>()
+
     const onCreateUser = (data: CreateUserFormData): Promise<CreateUserSuccess> => {
         return outputs.checkinOutput.createVisitor(data);
     };
@@ -25,7 +24,7 @@ function CreateVisitorContainer() {
         onSuccess: (data) => {
             alert(data?.message);
             router.push('/');
-            
+
         },
         onError: (e) => {
             alert(e.message)
@@ -33,7 +32,10 @@ function CreateVisitorContainer() {
     });
 
     return (
-        <CreateVisitorView user_id={params?.visitor_id?.toString()} onSubmit={onSubmit} register={register} handleSubmit={handleSubmit}/>
+        <CreateVisitorView
+            user_id={params?.visitor_id?.toString()}
+            onSubmit={onSubmit} register={register}
+            handleSubmit={handleSubmit} />
     )
 }
 
