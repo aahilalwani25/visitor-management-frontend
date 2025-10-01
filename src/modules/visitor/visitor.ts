@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-const CreateVisitorSchema= z.object({
-    cnic: z.string({required_error:"Cnic required"}),
-    full_name: z.string({required_error: "Full name required"})
+const CreateVisitorSchema = z.object({
+    cnic: z.string({ required_error: "Cnic required" }),
+    full_name: z.string({ required_error: "Full name required" })
 })
 
 export interface CreateUserFormData {
@@ -10,4 +10,10 @@ export interface CreateUserFormData {
     full_name: string;
     cnic: string;
     check_in: string;
+    card_type?: string;
+    dl_number?: string;
+    company_name?: string;
+    phone_number?: string;
+    website_url?: string;
+    email?: string;
 }

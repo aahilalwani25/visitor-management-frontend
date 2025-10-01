@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { outputs } from "@/config/output";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { CreateUserFormData } from "@/modules/visitor/visitor";
 import { CLEAR_RESULT, EVERY_SECOND_DETECTION } from "@/constants";
 
@@ -15,11 +15,13 @@ export default function IDCardDetection() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const params = useParams();
+  const searchParams = useSearchParams();
+  const type = searchParams.get("type");
   const visitor_id = params?.visitor_id?.toString();
   const router = useRouter();
 
   const onCreateUser = (data: CreateUserFormData): Promise<CreateUserSuccess> => {
-    return outputs.checkinOutput.createVisitor(data);
+    return outputs.checkinOutput.createVisitor(data, type as "cnic" | "dl" | "vc");
   };
 
   const { mutate: onSubmitUserInformation, isPending: isCreateUserPending } = useMutation({
@@ -35,15 +37,23 @@ export default function IDCardDetection() {
     }
   });
 
-  const { mutate: scanCnic, isPending } = useMutation({
+  const { mutate: scanId, isPending } = useMutation({
     mutationKey: ['checkin'],
     onSuccess: (data) => {
-      onSubmitUserInformation({
-        full_name: data?.data?.full_name!,
-        cnic: data?.data?.cnic,
-        check_in: new Date().toISOString(),
-        user_id: visitor_id!
-      })
+      const user: CreateUserFormData = {
+        user_id: visitor_id!,                          // required
+        full_name: data?.data?.full_name!,             // required
+        cnic: data?.data?.cnic!,                       // required
+        check_in: new Date().toISOString(),            // required
+        card_type: data?.data?.card_type ?? null, // optional
+        dl_number: data?.data?.dl_number ?? null, // optional
+        company_name: data?.data?.company_name ?? null,
+        phone_number: data?.data?.phone_number ?? null,
+        website_url: data?.data?.website_url ?? null,
+        email: data?.data?.email ?? null,
+      };
+
+      onSubmitUserInformation(user); // send to API
     },
     onError: (data) => {
       if (data.message !== "'NoneType' object is not iterable") {
@@ -52,7 +62,7 @@ export default function IDCardDetection() {
       }
     },
     mutationFn: (formData: FormData) => {
-      return outputs.checkinOutput.scanCnic(formData);
+      return outputs.checkinOutput.scanId(formData, type as "cnic" | "dl" | "vc");
     }
   })
 
@@ -77,8 +87,8 @@ export default function IDCardDetection() {
               canvasRef.current.toBlob((blob) => {
                 if (blob) {
                   const formData = new FormData();
-                  formData.append("file", blob, "cnic.jpg");
-                  scanCnic(formData);
+                  formData.append("file", blob, "id.jpg");
+                  scanId(formData);
                 }
               }, "image/jpeg");
             }
