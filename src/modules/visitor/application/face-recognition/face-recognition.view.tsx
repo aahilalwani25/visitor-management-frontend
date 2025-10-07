@@ -9,13 +9,13 @@ interface Props {
 }
 function FaceRecognitionView({ ...props }: Props) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-900 text-white">
+        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50 text-black">
     <h1 className="text-2xl font-bold mb-4">Face Check-in</h1>
 
     {/* Step Instructions */}
     <div className="mb-6 text-center">
         <p className="text-lg font-semibold mb-1">Step 1: Align your face in the camera frame</p>
-        <p className="text-sm text-gray-300">
+        <p className="text-sm text-black">
             Make sure your head is centered and clearly visible
         </p>
     </div>

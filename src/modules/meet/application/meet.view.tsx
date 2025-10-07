@@ -15,14 +15,6 @@ interface Props {
 function MeetView({ ...props }: Props) {
     return (
         <div className='min-h-screen bg-white items-center justify-center flex'>
-            <div className='inset-0 w-full h-12 absolute'>
-                <Image
-                    src={"/tapal-tea-logo.png"}
-                    height={100}
-                    width={100}
-                    alt='Tapal Tea (Pvt.) Ltd'
-                />
-            </div>
 
             <form
                 onSubmit={props.handleSubmit((data) => props.onSubmit(data))}

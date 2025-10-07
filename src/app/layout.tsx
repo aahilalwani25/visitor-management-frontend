@@ -29,6 +29,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* Logo at top left using Tailwind, no navbar or black background */}
+        <div className="absolute -top-6 left-4 z-20">
+          <a href="/">
+            <img
+              src="/tapal-tea-logo.png"
+              alt="Tapal Tea Logo"
+              className="h-40 w-[12.9rem] object-contain"
+            />
+          </a>
+        </div>
         <QueryProvider>
           {children}
         </QueryProvider>
