@@ -5,6 +5,7 @@ import { outputs } from "@/config/output";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { CreateUserFormData } from "@/modules/visitor/visitor";
 import { CLEAR_RESULT, EVERY_SECOND_DETECTION } from "@/constants";
+import { Scan_Type } from "@/modules/visitor/domain/checkin.types";
 
 
 export default function IDCardDetection() {
@@ -21,7 +22,7 @@ export default function IDCardDetection() {
   const router = useRouter();
 
   const onCreateUser = (data: CreateUserFormData): Promise<CreateUserSuccess> => {
-    return outputs.checkinOutput.createVisitor(data, type as "cnic" | "dl" | "vc");
+    return outputs.checkinOutput.createVisitor(data, type as Scan_Type);
   };
 
   const { mutate: onSubmitUserInformation, isPending: isCreateUserPending } = useMutation({
@@ -62,7 +63,7 @@ export default function IDCardDetection() {
       }
     },
     mutationFn: (formData: FormData) => {
-      return outputs.checkinOutput.scanId(formData, type as "cnic" | "dl" | "vc");
+      return outputs.checkinOutput.scanId(formData, type as Scan_Type);
     }
   })
 

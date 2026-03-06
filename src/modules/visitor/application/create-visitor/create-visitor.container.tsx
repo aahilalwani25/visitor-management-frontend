@@ -1,42 +1,53 @@
 "use client";
-import React from 'react'
-import CreateVisitorView from './create-visitor.view'
-import { useMutation } from '@tanstack/react-query';
-import { outputs } from '@/config/output';
-import { useForm } from 'react-hook-form'
-import { CreateUserFormData } from '../../visitor';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import React from "react";
+import CreateVisitorView from "./create-visitor.view";
+import { useMutation } from "@tanstack/react-query";
+import { outputs } from "@/config/output";
+import { useForm } from "react-hook-form";
+import { CreateUserFormData } from "../../visitor";
+import { useParams, useRouter } from "next/navigation";
+import { Scan_Type } from "../../domain/checkin.types";
 
 
-function CreateVisitorContainer() {
-    const params = useParams();
-    const router = useRouter();
-
-    const { register, handleSubmit } = useForm<CreateUserFormData>()
-
-    const onCreateUser = (data: CreateUserFormData): Promise<CreateUserSuccess> => {
-        return outputs.checkinOutput.createVisitor(data);
-    };
-
-    const { mutate: onSubmit, } = useMutation({
-        mutationKey: ['create-visitor'],
-        mutationFn: onCreateUser,
-        onSuccess: (data) => {
-            alert(data?.message);
-            router.push('/');
-
-        },
-        onError: (e) => {
-            alert(e.message)
-        }
-    });
-
-    return (
-        <CreateVisitorView
-            user_id={params?.visitor_id?.toString()}
-            onSubmit={onSubmit} register={register}
-            handleSubmit={handleSubmit} />
-    )
+interface Props{
+    type: Scan_Type   
 }
 
-export default CreateVisitorContainer
+function CreateVisitorContainer({...props}:Props) {
+  const params = useParams();
+  const router = useRouter();
+
+  const { register, handleSubmit } = useForm<CreateUserFormData>();
+
+  const onCreateUser = (
+    data: CreateUserFormData,
+  ): Promise<CreateUserSuccess> => {
+    return outputs.checkinOutput.createVisitor(
+      data,
+      props?.type || Scan_Type.CNIC,
+    );
+  };
+
+  const { mutate: onSubmit } = useMutation({
+    mutationKey: ["create-visitor"],
+    mutationFn: onCreateUser,
+    onSuccess: (data) => {
+      alert(data?.message);
+      router.push("/");
+    },
+    onError: (e) => {
+      alert(e.message);
+    },
+  });
+
+  return (
+    <CreateVisitorView
+      user_id={params?.visitor_id?.toString()}
+      onSubmit={onSubmit}
+      register={register}
+      handleSubmit={handleSubmit}
+    />
+  );
+}
+
+export default CreateVisitorContainer;

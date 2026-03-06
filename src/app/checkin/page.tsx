@@ -5,7 +5,7 @@ const CheckinSuccess = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const message = searchParams.get('message') || 'Visitor';
-  const type = searchParams.get('type') || 'checkin';
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       router.push('/'); // :arrow_left: or navigate somewhere else
@@ -13,7 +13,7 @@ const CheckinSuccess = () => {
     return () => clearTimeout(timer);
   }, []);
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#ed1b24] text-white">
       <h1 className="text-4xl font-bold mb-4">
         {message} 
       </h1>

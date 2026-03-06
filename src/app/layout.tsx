@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query.provider";
-import { QueryClientProvider } from "@tanstack/react-query";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,10 +29,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {/* Logo at top left using Tailwind, no navbar or black background */}
-        <div className="absolute -top-6 left-4 z-20">
+        <div className="absolute -top-6 left-4">
           <a href="/">
             <img
-              src="/tapal-tea-logo.png"
+              src="/tapal-tea-logo.jpg"
               alt="Tapal Tea Logo"
               className="h-40 w-[12.9rem] object-contain"
             />

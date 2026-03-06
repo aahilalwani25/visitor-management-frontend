@@ -1,5 +1,6 @@
 import { publicAxios } from "@/config/public.axios";
 import { CreateUserFormData } from "../visitor";
+import { Scan_Type } from "../domain/checkin.types";
 
 export default class CheckinHttp implements CheckinOutput {
 
@@ -11,19 +12,19 @@ export default class CheckinHttp implements CheckinOutput {
             return Promise.reject(error);
         }
     }
-    async createVisitor(data: CreateUserFormData, type: "cnic" | "dl" | "vc"): Promise<CreateUserSuccess> {
+    async createVisitor(data: CreateUserFormData, type: Scan_Type): Promise<CreateUserSuccess> {
         try {
             let result = null;
 
             switch (type) {
-                case "cnic":
+                case Scan_Type.CNIC:
                     result = await publicAxios.post('/create-user/', data);
                     break;
-                case "dl":
+                case Scan_Type.DRIVING_LICENSE:
                     result = await publicAxios.post('/create-dl-user/', data);
                     break;
 
-                case "vc":
+                case Scan_Type.VISITING_CARD:
                     result = await publicAxios.post('/create-visiting-card-user/', data);
                     break;
 
@@ -37,18 +38,18 @@ export default class CheckinHttp implements CheckinOutput {
         }
     }
 
-    async scanId(formData: FormData, type: "cnic" | "dl" | "vc"): Promise<CheckinSuccess> {
+    async scanId(formData: FormData, type: Scan_Type): Promise<CheckinSuccess> {
         try {
             let result = null;
             switch (type) {
-                case "cnic":
+                case Scan_Type.CNIC:
                     result = await publicAxios.postForm('/scan-cnic/', formData);
                     break;
-                case "dl":
+                case Scan_Type.DRIVING_LICENSE:
                     result = await publicAxios.postForm('/scan-dl/', formData);
                     break;
 
-                case "vc":
+                case Scan_Type.VISITING_CARD:
                     result = await publicAxios.postForm('/scan-visiting-card/', formData);
                     break;
 
