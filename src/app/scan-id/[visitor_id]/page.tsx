@@ -30,7 +30,7 @@ export default function IDCardDetection() {
   const onCreateUser = (
     data: CreateUserFormData,
   ): Promise<CreateUserSuccess> => {
-    return outputs.checkinOutput.createVisitor(data, type as Scan_Type);
+    return outputs.checkinOutput.createVisitor(data);
   };
 
   const { mutate: onSubmitUserInformation, isPending: isCreateUserPending } =
@@ -44,7 +44,7 @@ export default function IDCardDetection() {
           alert(data?.message);
         }
         detectionCountRef.current = 0;
-        router.replace("/");
+        router.replace(`/meet/${visitor_id}`);
         setIsDetectSuccessful(false);
         setDetectionResult(null);
       },
@@ -70,6 +70,7 @@ export default function IDCardDetection() {
     setTimeout(() => {
       setDetectionResult(null);
       setIsDetectSuccessful(false);
+      detectionCountRef.current = 0;
     }, CLEAR_RESULT);
   };
 
@@ -99,6 +100,7 @@ export default function IDCardDetection() {
         setIsDetectSuccessful(false);
         detectionCountRef.current = 0;
       } else {
+        console.log("Else Data: ", data);
         alert(JSON.stringify(data));
       }
     },
@@ -231,15 +233,13 @@ export default function IDCardDetection() {
         <div className="w-full max-w-2xl">
           {/* Camera feed with visual guides */}
           <div className="relative aspect-video bg-black rounded-xl">
-            {!userOutput && (
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover z-0"
-              />
-            )}
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover z-0"
+            />
 
             {/* Card placement guide */}
             <div className="absolute inset-0 flex items-center justify-center">

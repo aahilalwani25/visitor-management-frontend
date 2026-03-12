@@ -12,26 +12,9 @@ export default class CheckinHttp implements CheckinOutput {
             return Promise.reject(error);
         }
     }
-    async createVisitor(data: CreateUserFormData, type: Scan_Type): Promise<CreateUserSuccess> {
+    async createVisitor(data: CreateUserFormData): Promise<CreateUserSuccess> {
         try {
-            let result = null;
-
-            switch (type) {
-                case Scan_Type.CNIC:
-                    result = await publicAxios.post('/create-user/', data);
-                    break;
-                case Scan_Type.DRIVING_LICENSE:
-                    result = await publicAxios.post('/create-dl-user/', data);
-                    break;
-
-                case Scan_Type.VISITING_CARD:
-                    result = await publicAxios.post('/create-visiting-card-user/', data);
-                    break;
-
-                default:
-                    result = await publicAxios.post('/create-user/', data);
-                    break;
-            }
+            const result = await publicAxios.post('/create-user/', data);
             return Promise.resolve(result?.data)
         } catch (error) {
             return Promise.reject(error);

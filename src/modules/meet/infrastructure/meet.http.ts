@@ -6,7 +6,7 @@ export default class MeetHttp implements MeetOutput{
 
     async createMeet(data: CreateMeetFormData): Promise<CreateMeetSuccess> {
         try {
-            const result= await publicAxios.post('/create-meet/',data);
+            const result= await publicAxios.patch('/meet/',data);
             return Promise.resolve(result?.data)
         } catch (error) {
             return Promise.reject(error);

@@ -9,14 +9,13 @@ import {
 import { Button } from "@heroui/button";
 import { CreateUserFormData } from "@/modules/visitor/visitor";
 
-
 interface Props {
   userOutput: CreateUserFormData | null;
   setUserOutput: Dispatch<SetStateAction<CreateUserFormData | null>>;
+  onCancel: ()=> void | undefined;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onConfirm: (data: CreateUserFormData) => void;
-  onCancel: ()=>void
   isEditing: boolean;
   setIsEditing: Dispatch<SetStateAction<boolean>>;
 }
@@ -28,15 +27,39 @@ const FIELD_META: {
   icon: string;
   placeholder?: string;
 }[] = [
-  { key: "full_name",    label: "Full Name",    icon: "👤" },
-  { key: "cnic",         label: "CNIC",         icon: "🪪", placeholder: "e.g. 42101-1234567-1" },
-  { key: "card_type",    label: "Card Type",    icon: "💳" },
-  { key: "dl_number",    label: "DL Number",    icon: "🚗" },
-  { key: "company_name", label: "Company",      icon: "🏢" },
-  { key: "phone_number", label: "Phone",        icon: "📞" },
-  { key: "email",        label: "Email",        icon: "✉️" },
-  { key: "website_url",  label: "Website",      icon: "🌐" },
+  { key: "full_name", label: "Full Name", icon: "👤" },
+  {
+    key: "cnic",
+    label: "CNIC",
+    icon: "🪪",
+    placeholder: "e.g. 42101-1234567-1",
+  },
+  { key: "card_type", label: "Card Type", icon: "💳" },
+  { key: "dl_number", label: "DL Number", icon: "🚗" },
+  { key: "company_name", label: "Company", icon: "🏢" },
+  { key: "phone_number", label: "Phone", icon: "📞" },
+  { key: "email", label: "Email", icon: "✉️" },
+  { key: "website_url", label: "Website", icon: "🌐" },
 ];
+
+type CardType = "cnic" | "driving_license" | "visiting_card";
+
+const FIELDS_BY_CARD_TYPE: Record<
+  CardType,
+  (keyof Omit<CreateUserFormData, "check_in" | "user_id">)[]
+> = {
+  cnic: ["full_name", "cnic", "card_type"],
+  driving_license: ["full_name", "dl_number", "card_type"],
+  visiting_card: [
+    "full_name",
+    "cnic",
+    "phone_number",
+    "company_name",
+    "website_url",
+    "email",
+    "card_type",
+  ],
+};
 
 function ScanOutputConfirmation({
   userOutput,
@@ -46,23 +69,20 @@ function ScanOutputConfirmation({
   onConfirm,
   isEditing,
   setIsEditing,
-  onCancel
+  onCancel,
 }: Props) {
   const handleConfirm = () => {
     if (userOutput) onConfirm(userOutput);
   };
-  const handleFieldChange = (
-    key: keyof CreateUserFormData,
-    value: string
-  ) => {
+  const handleFieldChange = (key: keyof CreateUserFormData, value: string) => {
     setUserOutput((prev) =>
-      prev ? { ...prev, [key]: value === "" ? null : value } : prev
+      prev ? { ...prev, [key]: value === "" ? null : value } : prev,
     );
   };
 
   // Only render rows that have a non-null value in view mode
-  const visibleFields = FIELD_META.filter(
-    (f) => userOutput?.[f.key] != null && userOutput?.[f.key] !== ""
+  const visibleFields = FIELD_META.filter(({ key }) =>
+    FIELDS_BY_CARD_TYPE[userOutput?.card_type]?.includes(key),
   );
 
   return (

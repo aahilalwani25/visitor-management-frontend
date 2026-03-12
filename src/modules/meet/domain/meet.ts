@@ -7,5 +7,5 @@ export interface CreateMeetSuccess{
 export interface CreateMeetFormData{
     user_id: string
     company_name: string
-    meet_person: string
+    person_email: string
 }
